@@ -15,4 +15,4 @@ A simple auto scroller example using GB Studio 3.1 which features a screen size 
 - Utilizing the window/overlay layer and invisible sprites to create a screen sized moving boss
 - Detecting player position relative to camera to create dynamic 1D collision boundary 
 
-# Currently the rest of the tutorial is only available within the source code
+### Currently the rest of the tutorial is only available within the source code
