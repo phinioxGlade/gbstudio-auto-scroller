@@ -9,6 +9,9 @@ A simple auto scroller example using GB Studio 3.1 which features a screen size 
 - [2.0 - Background Sprites](https://github.com/phinioxGlade/gbstudio-background-sprites-tutorial)
 - [3.0 - Auto Scroller](https://github.com/phinioxGlade/gbstudio-auto-scroller) &lt; This Tutorial
 
+### Play in your Browser or on real hardware
+You can play the interactive version or download the rom at https://phinioxglade.itch.io/gb-studio-3-auto-scroller
+
 ### Key Concepts:
 
 - Moving the camera independently of the player
