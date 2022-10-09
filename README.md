@@ -20,15 +20,15 @@ You can play the interactive version or download the rom at https://phinioxglade
 
 The tutorial is broken to two parts
 
-1. [Part 1 - Auto Scroller](#auto-scroller)
-    1.  [How-to auto scroll the screen](https://github.com/phinioxGlade/gbstudio-auto-scroller/edit/main/README.md#how-to-auto-scroll-the-screen)
-    2.  [Dynamic Collision Boundaries](https://github.com/phinioxGlade/gbstudio-auto-scroller/edit/main/README.md#dynamic-collision-boundaries)
-3. [Part 2 - Screen Sized Boss](#screen-sized-boss)
-    1.  [How-to create a moveable screen sized boss]
-    2.  [Filling the overlay window layer](https://github.com/phinioxGlade/gbstudio-auto-scroller/edit/main/README.md#filling-the-overlay-window-layer)
-    3.  [Rendering sprites on top of the overlay](https://github.com/phinioxGlade/gbstudio-auto-scroller/edit/main/README.md#rendering-sprites-on-top-of-the-overlay)
+1. [Part 1 - Auto Scroller](#part-1---auto-scroller)
+    1.  [How-to auto scroll the screen](#how-to-auto-scroll-the-screen)
+    2.  [Dynamic Collision Boundaries](#dynamic-collision-boundaries)
+3. [Part 2 - Screen Sized Boss](#part-2---screen-sized-boss)
+    1.  [How-to create a moveable screen sized boss](#how-to-create-a-moveable-screen-sized-boss)
+    2.  [Filling the overlay window layer](#filling-the-overlay-window-layer)
+    3.  [Rendering sprites on top of the overlay](#rendering-sprites-on-top-of-the-overlay)
 
-## Auto Scroller
+## Part 1 - Auto Scroller
 
 ### How-to auto scroll the screen
 This is very simply, you need to decouple the camera from the player and move the screen using the inbuilt events.
@@ -56,7 +56,7 @@ VM_GET_INT16 VAR_CY, _camera_y
 </pre>
 
 #### Calculating the screen boundary
-Now you have the camera's position calculate the screen boundary:
+Now you have the camera's position calculate the screen boundary, the _camera_x/y are relative to the centre of the screen.
 
 * $CL = $CX - 80 = left edge in pixels
 * $CR = $CX + 80 = right edge in pixels
@@ -101,7 +101,7 @@ Next we need to apply those calculations using a second sprite's On Update. The 
 
 You should only apply this to dynamic edges you want to stop the player moving beyond. More calculation you do, the slower your game runs. In the example game code I'm only checking against left edge and the right edge is handled by a moving sprite which kills the player "On Hit".
 
-## Screen Sized Boss
+## Part 2 - Screen Sized Boss
 
 ### How-to create a moveable screen sized boss
 The primary threat of the level is a screen sized drill that instantly kills the player if they collide. The player must avoid random thrust forward attacks as the screen automatically scrolls left. The boss is always visible during play with a dynamic position due thrust attacks. The boss is created using the [Overlay Window Layer](https://www.gbstudio.dev/docs/scripting/script-glossary/screen) and a sprite with largest possible collision boundary box (128 x 128px). The sprite's location is synchronized with the overlay windows movenment, the difficultly being that the overlay window and the sprite coordinates are relative to the screen and camera respectively. Pinned sprite's cannot be used to overcome disparity as they lack the "On Collision" event, instead you'll need calculate the overlay window position as if is camera relative. Once the calculated overlay position is known, set the sprite to that location. This needs to be done every frame to insure that the boss' collision boundary box is in the correct position. 
@@ -110,17 +110,20 @@ The primary threat of the level is a screen sized drill that instantly kills the
 You can copy a subsection of the background layer into the window layer using [VM_OVERLAY_SET_SUBMAP](https://www.gbstudio.dev/docs/scripting/gbvm/gbvm-operations#vm_overlay_set_submap) or [VM_OVERLAY_SET_SUBMAP_EX](https://www.gbstudio.dev/docs/scripting/gbvm/gbvm-operations#vm_overlay_set_submap) GBVM commands. For our needs the VM_OVERLAY_SET_SUBMAP is simpler as we can use hard coded values.
 
 #### [Taken from the offical documentation:](https://www.gbstudio.dev/docs/scripting/gbvm/gbvm-operations#vm_overlay_set_submap)
-<pre> 
-; X: X-coordinate within the overlay window of the upper left corner in tiles
-; Y: Y-coordinate within the overlay window of the upper left corner in tiles
-; W: Width of the area in tiles
-; H: Height of the area in tiles
-; SX: X-coordinate within the level background map
-; SY: Y-coordinate within the level background map
-VM_OVERLAY_SET_SUBMAP X, Y, W, H, SX, SY
-</pre>
 
-#### Exmaple
+<pre> VM_OVERLAY_SET_SUBMAP X, Y, W, H, SX, SY</pre>
+
+| Parameter | Purpose | 
+|---|---|
+| X | X-coordinate within the overlay window of the upper left corner in tiles |
+| Y | Y-coordinate within the overlay window of the upper left corner in tiles |
+| W | Width of the area in tiles |
+| H | Height of the area in tiles |
+| SX | X-coordinate within the level background map |
+| SY | Y-coordinate within the level background map |
+
+
+#### Example
 At its largest the overlay window is the same size as the screen 160 x 144 pixels or 20 tiles horizontal and 18 tiles vertical. Ths background artwork contains a drill with the same dimimsions (20 x 18 tiles) located top left tile [x=60, y=0] to bottom right tile [x=79, y=17].
 
 <pre> 
