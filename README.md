@@ -1,4 +1,4 @@
-# GB Studio Tutorial - Auto Scroller
+# GB Studio Tutorial - Auto Scroller with Screen Sized Boss
 ![](/assets/backgrounds/drill-chase.png "The background")
 
 A simple auto scroller example using GB Studio 3.1 which features a screen size moving boss using the window/overlay layer.
@@ -88,5 +88,42 @@ Next we need to apply those calculations using a second sprite's On Update. The 
   *   If outside then set the player's position in the opposite direct by say 2 to 4 pixels 
 
 You should only apply this to dynamic edges you want to stop the player moving beyond. More calculation you do, the slower your game runs. In the example game code I'm only checking against left edge and the right edge is handled by a moving sprite which kills the player "On Hit".
+
+### How-to create a moveable screen sized boss
+The primary threat of the level is a screen sized drill that instancelly kills the player if they collide. The player must avoid random forward thrusts while the screen automatically scrolls left. The boss is always visible during play with a dynamic position. The boss is created using the [overlay window layer](https://www.gbstudio.dev/docs/scripting/script-glossary/screen) and a sprite with largest possible collision boundary box (128 x 128px). The sprite's location is synchronized with the overlay windows movenment, the difficultly being that the overlay window coordinates are relative to the screen and the sprite coordinates relative to the camera. Pinned sprite's cannot be used to overcome disparity as they lack the "On Collision" event, instead calculate the overlay window position as if it was relative to the camera. Once the overlay calculate position is known, set the sprite to that location. This needs to be done every frame to insure that the boss colision boundary box is in the correct position. 
+
+#### Filling the window/overlay layer
+You can copy a subsection of the background layer into the window layer using [VM_OVERLAY_SET_SUBMAP](https://www.gbstudio.dev/docs/scripting/gbvm/gbvm-operations#vm_overlay_set_submap) or [VM_OVERLAY_SET_SUBMAP]([VM_OVERLAY_SET_SUBMAP_EX](https://www.gbstudio.dev/docs/scripting/gbvm/gbvm-operations#vm_overlay_set_submap) GBVM commands. I'll only being VM_OVERLAY_SET_SUBMAP as it is simpler for my purposes.
+
+#### Taken from the offical documentation:
+<pre> 
+; X: X-coordinate within the overlay window of the upper left corner in tiles
+; Y: Y-coordinate within the overlay window of the upper left corner in tiles
+; W: Width of the area in tiles
+; H: Height of the area in tiles
+; SX: X-coordinate within the level background map
+; SY: Y-coordinate within the level background map
+VM_OVERLAY_SET_SUBMAP X, Y, W, H, SX, SY
+</pre>
+
+#### Exmaple
+At its largest the overlay window is the same size as the screen 160 x 144 pixels or 20 tiles horizontal and 18 tiles vertical. Ths background artwork contains a drill with the same dimimsions (20 x 18 tiles) located top left tile [x=60, y=0] to bottom right tile [x=79, y=17].
+
+<pre> 
+; copies a rectangle of background tiles from top left tile [x=60, y=0] 
+; to bottom right [x=79, y=17] over top of the entire overlay window layer
+VM_OVERLAY_SET_SUBMAP 0, 0, 20, 18, 60, 0
+</pre>
+
+#### Rendering sprites on top of the overlay
+The overlay window layer can rendered in front of or behind the sprite layer, defaults to behind. As of GB Studio 3.1 there in no inbuilt event but there is a GBVM variable, _show_actors_on_overlay and it can be set to 0 or 1, 0 being behind and 1 being in front. [VM_SET_UINT8](https://www.gbstudio.dev/docs/scripting/gbvm/gbvm-operations#vm_set_int8) is used to set the value. This applies to all sprites on screen, if you want to selectivaly hide or show sprites you'll need to do that manually.
+
+<pre>
+; Sprites behind of the overlay window layer
+VM_SET_UINT8 _show_actors_on_overlay, 0
+
+; Sprites in front of the overlay window layer
+VM_SET_UINT8 _show_actors_on_overlay, 1
+</pre>
 
 ### Currently the rest of the tutorial is only available within the source code
