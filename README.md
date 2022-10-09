@@ -18,8 +18,15 @@ You can play the interactive version or download the rom at https://phinioxglade
 - Detecting player position relative to camera to create dynamic 1D collision boundary 
 - Utilizing the window/overlay layer and invisible sprites to create a screen sized moving boss
 
+The tutorial is broken to two parts
+
+* [Part 1 - Auto Scroller](#auto-scroller)
+* [Part 2 - Screen Sized Boss](#screen-sized-boss)
+
+## Auto Scroller
+
 ### How-to auto scroll the screen
-This is very simply, you need to decouple the camera from the player and move the screen using the inbuilt events
+This is very simply, you need to decouple the camera from the player and move the screen using the inbuilt events.
 
 1. Scene "On Init" add the "Lock Camera to Player" event with both axis' unchecked. The camera will no longer follow the player.
 2. Scene "On Init" set the initial camera position.
@@ -88,6 +95,8 @@ Next we need to apply those calculations using a second sprite's On Update. The 
   *   If outside then set the player's position in the opposite direct by say 2 to 4 pixels 
 
 You should only apply this to dynamic edges you want to stop the player moving beyond. More calculation you do, the slower your game runs. In the example game code I'm only checking against left edge and the right edge is handled by a moving sprite which kills the player "On Hit".
+
+## Screen Sized Boss
 
 ### How-to create a moveable screen sized boss
 The primary threat of the level is a screen sized drill that instancelly kills the player if they collide. The player must avoid random forward thrusts while the screen automatically scrolls left. The boss is always visible during play with a dynamic position. The boss is created using the [overlay window layer](https://www.gbstudio.dev/docs/scripting/script-glossary/screen) and a sprite with largest possible collision boundary box (128 x 128px). The sprite's location is synchronized with the overlay windows movenment, the difficultly being that the overlay window coordinates are relative to the screen and the sprite coordinates relative to the camera. Pinned sprite's cannot be used to overcome disparity as they lack the "On Collision" event, instead calculate the overlay window position as if it was relative to the camera. Once the overlay calculate position is known, set the sprite to that location. This needs to be done every frame to insure that the boss colision boundary box is in the correct position. 
