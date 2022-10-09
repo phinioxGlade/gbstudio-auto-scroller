@@ -20,8 +20,13 @@ You can play the interactive version or download the rom at https://phinioxglade
 
 The tutorial is broken to two parts
 
-* [Part 1 - Auto Scroller](#auto-scroller)
-* [Part 2 - Screen Sized Boss](#screen-sized-boss)
+1. [Part 1 - Auto Scroller](#auto-scroller)
+    1.  [How-to auto scroll the screen](https://github.com/phinioxGlade/gbstudio-auto-scroller/edit/main/README.md#how-to-auto-scroll-the-screen)
+    2.  [Dynamic Collision Boundaries](https://github.com/phinioxGlade/gbstudio-auto-scroller/edit/main/README.md#dynamic-collision-boundaries)
+3. [Part 2 - Screen Sized Boss](#screen-sized-boss)
+    1.  [How-to create a moveable screen sized boss]
+    2.  [Filling the overlay window layer](https://github.com/phinioxGlade/gbstudio-auto-scroller/edit/main/README.md#filling-the-overlay-window-layer)
+    3.  [Rendering sprites on top of the overlay](https://github.com/phinioxGlade/gbstudio-auto-scroller/edit/main/README.md#rendering-sprites-on-top-of-the-overlay)
 
 ## Auto Scroller
 
@@ -99,12 +104,12 @@ You should only apply this to dynamic edges you want to stop the player moving b
 ## Screen Sized Boss
 
 ### How-to create a moveable screen sized boss
-The primary threat of the level is a screen sized drill that instancelly kills the player if they collide. The player must avoid random forward thrusts while the screen automatically scrolls left. The boss is always visible during play with a dynamic position. The boss is created using the [overlay window layer](https://www.gbstudio.dev/docs/scripting/script-glossary/screen) and a sprite with largest possible collision boundary box (128 x 128px). The sprite's location is synchronized with the overlay windows movenment, the difficultly being that the overlay window coordinates are relative to the screen and the sprite coordinates relative to the camera. Pinned sprite's cannot be used to overcome disparity as they lack the "On Collision" event, instead calculate the overlay window position as if it was relative to the camera. Once the overlay calculate position is known, set the sprite to that location. This needs to be done every frame to insure that the boss colision boundary box is in the correct position. 
+The primary threat of the level is a screen sized drill that instantly kills the player if they collide. The player must avoid random thrust forward attacks as the screen automatically scrolls left. The boss is always visible during play with a dynamic position due thrust attacks. The boss is created using the [Overlay Window Layer](https://www.gbstudio.dev/docs/scripting/script-glossary/screen) and a sprite with largest possible collision boundary box (128 x 128px). The sprite's location is synchronized with the overlay windows movenment, the difficultly being that the overlay window and the sprite coordinates are relative to the screen and camera respectively. Pinned sprite's cannot be used to overcome disparity as they lack the "On Collision" event, instead you'll need calculate the overlay window position as if is camera relative. Once the calculated overlay position is known, set the sprite to that location. This needs to be done every frame to insure that the boss' collision boundary box is in the correct position. 
 
-#### Filling the window/overlay layer
-You can copy a subsection of the background layer into the window layer using [VM_OVERLAY_SET_SUBMAP](https://www.gbstudio.dev/docs/scripting/gbvm/gbvm-operations#vm_overlay_set_submap) or [VM_OVERLAY_SET_SUBMAP]([VM_OVERLAY_SET_SUBMAP_EX](https://www.gbstudio.dev/docs/scripting/gbvm/gbvm-operations#vm_overlay_set_submap) GBVM commands. I'll only being VM_OVERLAY_SET_SUBMAP as it is simpler for my purposes.
+### Filling the overlay window layer
+You can copy a subsection of the background layer into the window layer using [VM_OVERLAY_SET_SUBMAP](https://www.gbstudio.dev/docs/scripting/gbvm/gbvm-operations#vm_overlay_set_submap) or [VM_OVERLAY_SET_SUBMAP_EX](https://www.gbstudio.dev/docs/scripting/gbvm/gbvm-operations#vm_overlay_set_submap) GBVM commands. For our needs the VM_OVERLAY_SET_SUBMAP is simpler as we can use hard coded values.
 
-#### Taken from the offical documentation:
+#### [Taken from the offical documentation:](https://www.gbstudio.dev/docs/scripting/gbvm/gbvm-operations#vm_overlay_set_submap)
 <pre> 
 ; X: X-coordinate within the overlay window of the upper left corner in tiles
 ; Y: Y-coordinate within the overlay window of the upper left corner in tiles
@@ -124,8 +129,8 @@ At its largest the overlay window is the same size as the screen 160 x 144 pixel
 VM_OVERLAY_SET_SUBMAP 0, 0, 20, 18, 60, 0
 </pre>
 
-#### Rendering sprites on top of the overlay
-The overlay window layer can rendered in front of or behind the sprite layer, defaults to behind. As of GB Studio 3.1 there in no inbuilt event but there is a GBVM variable, _show_actors_on_overlay and it can be set to 0 or 1, 0 being behind and 1 being in front. [VM_SET_UINT8](https://www.gbstudio.dev/docs/scripting/gbvm/gbvm-operations#vm_set_int8) is used to set the value. This applies to all sprites on screen, if you want to selectivaly hide or show sprites you'll need to do that manually.
+### Rendering sprites on top of the overlay
+Be default sprites are rendered behind the overlay window layer but can rendered in front of if desired. As of GB Studio 3.1 there in no inbuilt event but there is a GBVM variable, _show_actors_on_overlay and it can be set to 0 or 1, 0 being behind and 1 being in front. [VM_SET_UINT8](https://www.gbstudio.dev/docs/scripting/gbvm/gbvm-operations#vm_set_int8) is used to set the value. This applies to all sprites on screen, if you want to selectivaly hide or show sprites you'll need to do that manually.
 
 <pre>
 ; Sprites behind of the overlay window layer
