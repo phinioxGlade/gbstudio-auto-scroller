@@ -104,7 +104,10 @@ You should only apply this to dynamic edges you want to stop the player moving b
 ## Part 2 - Screen Sized Boss
 
 ### How-to create a moveable screen sized boss
-The primary threat of the level is a screen sized drill that instantly kills the player if they collide. The player must avoid random thrust forward attacks as the screen automatically scrolls left. The boss is always visible during play with a dynamic position due thrust attacks. The boss is created using the [Overlay Window Layer](https://www.gbstudio.dev/docs/scripting/script-glossary/screen) and a sprite with largest possible collision boundary box (128 x 128px). The sprite's location is synchronized with the overlay windows movenment, the difficultly being that the overlay window and the sprite coordinates are relative to the screen and camera respectively. Pinned sprite's cannot be used to overcome disparity as they lack the "On Collision" event, instead you'll need calculate the overlay window position as if is camera relative. Once the calculated overlay position is known, set the sprite to that location. This needs to be done every frame to insure that the boss' collision boundary box is in the correct position. 
+The primary threat of the level is a screen sized drill that instantly kills the player if they collide. The player must avoid random thrust forward attacks as the screen automatically scrolls left. The boss is always visible during play with a dynamic position due thrust attacks. The boss is created using the [Overlay Window Layer](https://www.gbstudio.dev/docs/scripting/script-glossary/screen) and a sprite with largest possible collision boundary box (128 x 128px). The sprite's location is synchronized with the overlay windows movenment, the difficultly being that the overlay window and the sprite coordinates are relative to the screen and camera respectively. Pinned sprite's cannot be used to overcome disparity as they lack the "On Hit" event, instead you'll need calculate the overlay window position as if is camera relative. Once the calculated overlay position is known, set the sprite to that location. This needs to be done every frame to insure that the boss' collision boundary box is in the correct position. 
+
+### Limitations of the overlay
+The drill is positioned on the right and attacks from the right, this is intentional. The top left corner of the overlay window can be positioned between (x=0, y=0) to (x=160, y=144), it can not be position at (x=-80, y=40) or any negative coordinate. I have designed this boss to work within the layer's limitations. So it is easy to use this to create a boss attack from right to left, bottom to top or bottom right to top left corner. 
 
 ### Filling the overlay window layer
 You can copy a subsection of the background layer into the window layer using [VM_OVERLAY_SET_SUBMAP](https://www.gbstudio.dev/docs/scripting/gbvm/gbvm-operations#vm_overlay_set_submap) or [VM_OVERLAY_SET_SUBMAP_EX](https://www.gbstudio.dev/docs/scripting/gbvm/gbvm-operations#vm_overlay_set_submap) GBVM commands. For our needs the VM_OVERLAY_SET_SUBMAP is simpler as we can use hard coded values.
@@ -134,6 +137,21 @@ At its largest the overlay window is the same size as the screen 160 x 144 pixel
 VM_OVERLAY_SET_SUBMAP 0, 0, 20, 18, 60, 0
 </pre>
 
+### Moving the overlay window layer
+Once the overlay is populated [Overlay Move To](https://www.gbstudio.dev/docs/scripting/script-glossary/screen#overlay-move-to) event or [VM_OVERLAY_MOVE_TO](https://www.gbstudio.dev/docs/scripting/gbvm/gbvm-operations#vm_overlay_move_to) can set position.
+
+<pre>
+; the overlay will scroll/move to the current position to the new position
+; the position is tile based, tile (x=14, y=8) equals pixel (x=112, y=64)
+VM_OVERLAY_MOVE_TO 14, 3, .OVERLAY_IN_SPEED
+</pre>
+
+You will also need to set the [VM_OVERLAY_WAIT](https://www.gbstudio.dev/docs/scripting/gbvm/gbvm-operations#vm_overlay_wait) so the overlay can move without stopping player movenment:
+
+<pre>VM_OVERLAY_WAIT .UI_MODAL .UI_WAIT_NONE</pre>
+
+You only need to set the VM_OVERLAY_WAIT before you move the layer for the first time and after displaying dialogue since that event reset the wait.
+
 ### Rendering sprites on top of the overlay
 Be default sprites are rendered behind the overlay window layer but can rendered in front of if desired. As of GB Studio 3.1 there in no inbuilt event but there is a GBVM variable, _show_actors_on_overlay and it can be set to 0 or 1, 0 being behind and 1 being in front. [VM_SET_UINT8](https://www.gbstudio.dev/docs/scripting/gbvm/gbvm-operations#vm_set_int8) is used to set the value. This applies to all sprites on screen, if you want to selectivaly hide or show sprites you'll need to do that manually.
 
@@ -145,19 +163,43 @@ VM_SET_UINT8 _show_actors_on_overlay, 0
 VM_SET_UINT8 _show_actors_on_overlay, 1
 </pre>
 
-### Createing the boss' collision boundray
+### Collision detection
+Since the overlay itself lacks native collision detection we need to find a solution. The 1D method described above could work but is less performant and harder to work with standard collision group events. To leverage the inbuilt collision functionality we can use a sprite, which we will refer to as the "boss" sprite. 
 
-#### Creating collision boundary box
-Using a sprite we can leverage the inbuilt collision detection that it offers. 
+#### Setup collision boundary box
 Within the sprite editor you can set the collision boundary box, which has a maximum 128 pixels for each axis. This unforunately is less the maximum size of the overlay (160 x 144 pixels), if you want to cover the whole overlay there are a few solutions:
 
-1. Use multiple sprites which have a performance impact
-2. Adjust the sprite position so that aligns with where the player is likely to collidate, i.e if the player is near the top of the overlay set the sprite to top left and if the near the bottom set the sprite to bottom left
+1. Use multiple sprites which will impact performance
+2. Adjust the "boss" sprite's position so that aligns where the player is likely to collidate, i.e if the player is near the top of the overlay set the "boss" sprite to top left and if the near the bottom set the "boss" sprite to bottom left
 
-For the purposes of the tutorial the "boss" sprite only need be 16 tiles high (128px) as the player's collision box is 24 pixels, so even if the player is on the bottom the of the screen it will still collidate, as well as being positioned to prevent the player from jumping over.
+For the purposes of the tutorial the "boss" sprite only need be 16 tiles high (128px) as the player's collision box is 24 pixels, so even if the player is on the bottom the of the screen it will still collidate, as well positioning the sprite at y=0 as to prevent the player from jumping over.
 
-To illustrate "boss" sprite collision boundary the sprite frame contains art at the top and bottom. This exists to help your understanding and is unnecessary outside of debugging unless you provide the player reason, i.e. animated smoke.
+To illustrate "boss" sprite's collision boundary the sprite frame contains art at the top and bottom. This exists to help your understanding and is unnecessary outside of debugging unless you provide the player reason, i.e. animated smoke.
 
 #### Synchronized collision boundary box with overlay position
+We need to add logic to the "boss" sprite "On Update" so that we synchronize the sprite's position with the overlay.
+To do this we need to calculate the overlay's position relative to the camera, this is stored in two varaibles:
+
+| Variable | Purpose | 
+|---|---|
+| _WX_REG | overlay's X-coordinate within the screen |
+| _WY_REG | overlay's Y-coordinate within the screen |
+
+<pre>
+; get the overlay and camera position
+VM_GET_UINT8 VAR_WX, _WX_REG
+VM_GET_UINT8 VAR_WY, _WY_REG
+VM_GET_INT16 VAR_CX, _camera_x
+VM_GET_INT16 VAR_CY, _camera_y
+</pre>
+
+With the the overlay's position, we can calculate its offset relative to the background.
+
+| Variable | Equation | |
+|---|---|---|
+| boss sprite X | camera x - (screen width / 2) + overlay x | $bx = $cx - 80 + $wx |
+| boss sprite Y | camera y - (screen height / 2) + overlay y | $by = $cy - 80 + $wy |
+
+And finally use the "Set Actor Position" event using the $bx and $by as the values. You'll need to change the value type from tiles to px.
 
 ### Currently the rest of the tutorial is only available within the source code
