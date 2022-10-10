@@ -124,6 +124,8 @@ You can copy a subsection of the background layer into the window layer using [V
 
 
 #### Example
+![](/tutorial-resources/Background-To-Overlay.png)
+
 At its largest the overlay window is the same size as the screen 160 x 144 pixels or 20 tiles horizontal and 18 tiles vertical. Ths background artwork contains a drill with the same dimimsions (20 x 18 tiles) located top left tile [x=60, y=0] to bottom right tile [x=79, y=17].
 
 <pre> 
@@ -142,5 +144,20 @@ VM_SET_UINT8 _show_actors_on_overlay, 0
 ; Sprites in front of the overlay window layer
 VM_SET_UINT8 _show_actors_on_overlay, 1
 </pre>
+
+### Createing the boss' collision boundray
+
+#### Creating collision boundary box
+Using a sprite we can leverage the inbuilt collision detection that it offers. 
+Within the sprite editor you can set the collision boundary box, which has a maximum 128 pixels for each axis. This unforunately is less the maximum size of the overlay (160 x 144 pixels), if you want to cover the whole overlay there are a few solutions:
+
+1. Use multiple sprites which have a performance impact
+2. Adjust the sprite position so that aligns with where the player is likely to collidate, i.e if the player is near the top of the overlay set the sprite to top left and if the near the bottom set the sprite to bottom left
+
+For the purposes of the tutorial the "boss" sprite only need be 16 tiles high (128px) as the player's collision box is 24 pixels, so even if the player is on the bottom the of the screen it will still collidate, as well as being positioned to prevent the player from jumping over.
+
+To illustrate "boss" sprite collision boundary the sprite frame contains art at the top and bottom. This exists to help your understanding and is unnecessary outside of debugging unless you provide the player reason, i.e. animated smoke.
+
+#### Synchronized collision boundary box with overlay position
 
 ### Currently the rest of the tutorial is only available within the source code
