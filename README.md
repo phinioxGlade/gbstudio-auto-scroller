@@ -29,6 +29,7 @@ The tutorial is broken to two parts
     3.  [Rendering sprites on top of the overlay](#rendering-sprites-on-top-of-the-overlay)
 
 ## Part 1 - Auto Scroller
+![](/tutorial-resources/lesson-1d-boundary.gif)
 
 ### How-to auto scroll the screen
 This is very simply, you need to decouple the camera from the player and move the screen using the inbuilt events.
@@ -88,6 +89,8 @@ This is done using the "If Math Expression" event.
 * Player collided with bottom screen edge: $pb >= $cb
 
 #### Preventing the player from leaving screen
+![](/tutorial-resources/lesson-1d-scrolling-boundary.gif)
+
 Next we need to apply those calculations using a second sprite's On Update. The camera movenment and colision check can't use the same sprite, you might be able to but i've found that you need to seperate them.
 
 1. Add a second pinned sprite to the screen
