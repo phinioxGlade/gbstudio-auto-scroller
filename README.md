@@ -29,7 +29,6 @@ The tutorial is broken to two parts
     3.  [Rendering sprites on top of the overlay](#rendering-sprites-on-top-of-the-overlay)
 
 ## Part 1 - Auto Scroller
-![](/tutorial-resources/lesson-1d-boundary.gif)
 
 ### How-to auto scroll the screen
 This is very simply, you need to decouple the camera from the player and move the screen using the inbuilt events.
@@ -42,6 +41,8 @@ This is very simply, you need to decouple the camera from the player and move th
 When you run the game, the camera is initlized to a specific position and then scroll to the target position. GBS does not prevent the player from leaving the screen, its up to you to handle this yourself.
 
 ### Dynamic collision boundaries
+![](/tutorial-resources/lesson-1d-boundary.gif)
+
 Currently I'm not aware of any built in features which will prevent a player from leaving the screen and unforunately this is not a particularly easy task to get working without issues. So to acheive this we must compare the camera's position to that of the player.
 
 The "Store Actor Actor Position in Varaibles" event can be used to get the player's position in pixels but how do we get the current camera position? They're assessible via the GBVM variables "_camera_x" and "_camera_y".
